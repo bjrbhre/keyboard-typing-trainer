@@ -147,8 +147,13 @@ class App {
     // Keyboard display idle (no highlight)
     this.keyboardDisplay.clearHighlight();
 
-    // Show editable textarea in text-display
+    // Show editable textarea in text-display, pre-filled with lastFreeText
     this._freeTextarea = this.textDisplay.showFreeTextarea();
+    const savedText = store.get('lastFreeText');
+    if (savedText) {
+      this._freeTextarea.value = savedText;
+      freeAction.disabled = savedText.trim().length < 5;
+    }
 
     // Validate: enable/disable Commencer button based on length
     this._freeTextarea.addEventListener('input', () => {
@@ -172,6 +177,11 @@ class App {
   }
 
   _exitFreeMode() {
+    // Save current text to store for persistence
+    const textToSave = this._freeText || (this._freeTextarea && this._freeTextarea.value) || '';
+    if (textToSave.trim()) {
+      store.set('lastFreeText', textToSave);
+    }
     this._freeInputActive = false;
     this._freeTextarea = null;
     this._freeText = null;
@@ -181,8 +191,9 @@ class App {
     const trimmedText = this._freeTextarea.value.trim();
     if (trimmedText.length < 5) return;
 
-    // Store the free text for replay
+    // Store the free text for replay and persistence
     this._freeText = trimmedText;
+    store.set('lastFreeText', trimmedText);
     this.freePhase = 'drill';
     this._freeInputActive = false;
 
@@ -197,7 +208,7 @@ class App {
     // Update action button: "Modifier le texte"
     const freeAction = document.getElementById('free-action');
     freeAction.disabled = false;
-    freeAction.textContent = 'Modifier le texte';
+    freeAction.textContent = 'Modifier le texte · Echap';
   }
 
   _returnToFreeInput() {
@@ -445,6 +456,12 @@ inputCapture.addEventListener('keydown', (e) => {
     Backquote:'`',Quote:"'",IntlBackslash:'\\',
   };
   if (CODE_TO_KEY[key]) key = CODE_TO_KEY[key];
+
+  // Esc = return to free input phase when in free drill mode
+  if (key === 'Escape' && app.mode === 'free' && app.freePhase === 'drill') {
+    app._returnToFreeInput();
+    return;
+  }
 
   // Enter = replay drill when finished, otherwise pass as newline
   if (key === 'Enter') {
