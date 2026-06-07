@@ -27,7 +27,7 @@ export class LevelUI {
       if (isCompleted) cls += ' completed';
       else if (isAttempted) cls += ' attempted';
 
-      navHtml += `<button class="${cls}" data-level="${spec.id}">${spec.id}</button>`;
+      navHtml += `<button class="${cls}" data-level="${spec.id}" data-tooltip="${spec.name}">${spec.id}</button>`;
     }
     this.navEl.innerHTML = navHtml;
 

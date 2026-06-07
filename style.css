@@ -188,6 +188,7 @@ header {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .level-btn:hover {
@@ -220,6 +221,31 @@ header {
   background: var(--green);
   color: var(--base);
   border-color: var(--green);
+}
+
+.level-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface0);
+  border: 1px solid var(--overlay0);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.level-btn:hover::after {
+  opacity: 1;
 }
 
 main {
