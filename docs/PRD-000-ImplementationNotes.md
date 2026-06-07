@@ -317,3 +317,39 @@ Voir [RFC-001.md](RFC-001.md) pour la liste des améliorations potentielles :
 | `js/app.js` | Mode `'free'`, `freePhase`, `_enterFreeMode()`, `_exitFreeMode()`, `_restoreNormalMode()`, `_switchMode()` |
 | `js/ui.js` | Méthode `showFreePlaceholder()` |
 | `js/keyboard-display.js` | Méthode `clearHighlight()` |
+
+### Step 2 — Text input phase ✅
+
+**Statut :** Terminée
+
+#### Ce qui a été implémenté
+
+- Textarea éditable dans `#text-display` quand `mode === 'free'` et `freePhase === 'input'`
+- Même style que le drill view (font, padding, background, height 7.5rem, scrollbar hidden, no resize)
+- Placeholder : "Tape ou colle ton texte ici…"
+- Focus : le textarea reçoit le focus, le re-focus global de `#input-capture` est désactivé via flag `_freeInputActive`
+- Validation : bouton "Commencer" activé/désactivé selon `textarea.value.trim().length >= 5`
+- Ctrl+Enter : raccourci clavier sur le textarea, même action que le bouton
+- Bouton "Commencer" click → `_startFreeDrill()` (placeholder pour Step 3)
+
+#### Décisions prises pendant l'implémentation
+
+1. **Flag `_freeInputActive` sur App** — le handler `document.addEventListener('click')` qui re-focus `#input-capture` vérifie ce flag. Quand actif, le re-focus est skipé. Le textarea libre maintient son propre focus.
+
+2. **`e.stopPropagation()` sur le click du textarea** — empêche le click de buller jusqu'au document et trigger le re-focus de `#input-capture`.
+
+3. **`TextDisplay._freeInputMode` guard** — `render()` ne doit pas écraser le textarea quand en mode libre. Le flag est set à `true` par `showFreeTextarea()` et remis à `false` par `showDrill()`. Sans ce guard, le `engine.reset()` (via `_restoreNormalMode → selectLevel`) déclenche un render qui écrase le textarea.
+
+4. **`TextDisplay.showDrill()`** — méthode explicite pour sortir du mode libre input et relancer le render normal. Appelée par `_restoreNormalMode()` avant `selectLevel()`.
+
+5. **CSS textarea** — `.free-textarea` hérite de `font-family`, `font-size`, `line-height`, `letter-spacing` via `inherit`. Padding à 0 car le container `#text-display` a déjà son propre padding. `::placeholder` coloré en `var(--overlay0)`.
+
+6. **Stats restées visibles** — décision prise au cycle précédent : les stats restent affichées en mode Libre pour garder le même display global.
+
+#### Fichiers modifiés
+
+| Fichier | Changement |
+|---|---|
+| `js/app.js` | `_freeInputActive`, `_freeTextarea`, validation input, Ctrl+Enter, `_startFreeDrill()`, click handler bouton, guard re-focus |
+| `js/ui.js` | `showFreeTextarea()` remplace `showFreePlaceholder()`, `showDrill()`, guard `_freeInputMode` dans `render()` |
+| `style.css` | `.free-textarea` styles (remplace `.free-placeholder`) |

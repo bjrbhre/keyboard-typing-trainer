@@ -21,6 +21,9 @@ export class TextDisplay {
   }
 
   render() {
+    // In free input mode, don't overwrite the textarea
+    if (this._freeInputMode) return;
+
     const text = this.engine.text;
 
     if (this.engine.finished) {
@@ -73,9 +76,18 @@ export class TextDisplay {
     `;
   }
 
-  showFreePlaceholder() {
+  showFreeTextarea() {
+    this._freeInputMode = true;
     this.container.classList.remove('drill-finished');
-    this.container.innerHTML = '<div class="free-placeholder">Tape ou colle ton texte ici…</div>';
+    this.container.innerHTML = '<textarea class="free-textarea" placeholder="Tape ou colle ton texte ici…"></textarea>';
+    const textarea = this.container.querySelector('.free-textarea');
+    textarea.focus();
+    return textarea;
+  }
+
+  showDrill() {
+    this._freeInputMode = false;
+    this.render();
   }
 
   _scrollToCursor() {

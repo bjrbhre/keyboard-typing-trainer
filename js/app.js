@@ -28,6 +28,13 @@ class App {
     // Free mode phase: 'input' or 'drill'
     this.freePhase = 'input';
 
+    // Flag: when true, global click re-focus to #input-capture is disabled
+    // (visible textarea in free mode takes focus instead)
+    this._freeInputActive = false;
+
+    // Reference to the free-mode textarea element
+    this._freeTextarea = null;
+
     // Language: 'en' or 'fr'
     this.language = store.get('language') || 'en';
 
@@ -61,6 +68,12 @@ class App {
 
     // Mode tabs
     this._initModeTabs();
+
+    // Free action button click handler
+    document.getElementById('free-action').addEventListener('click', () => {
+      if (!this._freeInputActive) return;
+      this._startFreeDrill();
+    });
   }
 
   _generateText() {
@@ -114,13 +127,14 @@ class App {
 
   _enterFreeMode() {
     this.freePhase = 'input';
+    this._freeInputActive = true;
 
     // Hide level bar nav, show free action button
     const levelBar = document.getElementById('level-bar');
     levelBar.classList.add('free-mode');
     const freeAction = document.getElementById('free-action');
     freeAction.classList.remove('hidden');
-    freeAction.disabled = true; // No textarea yet — disabled
+    freeAction.disabled = true;
 
     // Hide language picker
     document.getElementById('lang-toggle').classList.add('free-hidden');
@@ -129,12 +143,38 @@ class App {
     // Keyboard display idle (no highlight)
     this.keyboardDisplay.clearHighlight();
 
-    // Show placeholder in text-display
-    this.textDisplay.showFreePlaceholder();
+    // Show editable textarea in text-display
+    this._freeTextarea = this.textDisplay.showFreeTextarea();
+
+    // Validate: enable/disable Commencer button based on length
+    this._freeTextarea.addEventListener('input', () => {
+      freeAction.disabled = this._freeTextarea.value.trim().length < 5;
+    });
+
+    // Ctrl+Enter shortcut on textarea
+    this._freeTextarea.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        if (!freeAction.disabled) {
+          this._startFreeDrill();
+        }
+      }
+    });
+
+    // Click inside textarea should not steal focus to #input-capture
+    this._freeTextarea.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
   }
 
   _exitFreeMode() {
-    // Save text to store (for persistence in Step 4, just the slot for now)
+    this._freeInputActive = false;
+    this._freeTextarea = null;
+  }
+
+  _startFreeDrill() {
+    // Placeholder for Step 3 — currently a console log
+    console.log('Free drill would start with:', this._freeTextarea.value.trim());
   }
 
   _restoreNormalMode() {
@@ -147,6 +187,9 @@ class App {
     // Show language picker
     document.getElementById('lang-toggle').classList.remove('free-hidden');
     document.getElementById('lang-menu').classList.remove('free-hidden');
+
+    // Exit free input mode in TextDisplay so render() works again
+    this.textDisplay.showDrill();
 
     // Resume current level
     this.selectLevel(this.currentLevel);
@@ -310,7 +353,9 @@ const inputCapture = document.getElementById('input-capture');
 inputCapture.focus();
 
 // Re-focus on any click so we never lose capture
+// But skip when free input textarea is active (it holds focus)
 document.addEventListener('click', () => {
+  if (app._freeInputActive) return;
   inputCapture.focus();
 });
 
