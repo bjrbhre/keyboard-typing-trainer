@@ -18,6 +18,7 @@ class App {
     this.layout = LAYOUTS[savedLayout] || LAYOUTS.QWERTY;
     this.currentLevel = store.get('currentLevel') || 1;
     this.completedLevels = store.get('completedLevels') || [];
+    this.attemptedLevels = store.get('attemptedLevels') || [];
     this.scores = store.get('scores') || {};
     this.levelCompleted = false;
 
@@ -40,6 +41,7 @@ class App {
     // Listen for engine events to check level completion
     this.engine.on((event) => {
       if (['correct', 'error', 'backspace'].includes(event.type)) {
+        this._markAttempted();
         this._checkLevelCompletion();
         this.levelUI.updateThresholds();
       }
@@ -184,6 +186,15 @@ class App {
     this.levelUI.render();
   }
 
+  _markAttempted() {
+    if (!this.attemptedLevels.includes(this.currentLevel) &&
+        !this.completedLevels.includes(this.currentLevel)) {
+      this.attemptedLevels.push(this.currentLevel);
+      store.set('attemptedLevels', this.attemptedLevels);
+      this.levelUI.render();
+    }
+  }
+
   replayDrill() {
     this.levelCompleted = false;
     const text = this._generateText();
@@ -219,11 +230,7 @@ class App {
         store.set('scores', this.scores);
       }
 
-      const nextLevel = this.currentLevel + 1;
-      if (nextLevel <= LEVEL_SPECS.length && !this.completedLevels.includes(nextLevel)) {
-        store.set('currentLevel', nextLevel);
-      }
-
+      this.levelUI.render();
       this.levelUI.showLevelComplete();
     }
   }

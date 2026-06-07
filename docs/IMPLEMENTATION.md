@@ -219,6 +219,14 @@ Reference: [PRD.md](PRD.md)
 
 7. **Pas de validation en entraînement** — `_checkLevelCompletion()` ne s'active que en mode `learning`. En mode `training`, l'info sous les niveaux affiche seulement le nom + la langue, pas les seuils.
 
+8. **Suppression des niveaux verrouillés** — les niveaux ne sont jamais verrouillés. L'utilisateur peut choisir librement n'importe quel niveau dans les deux modes. 3 états visuels pour les boutons :
+   - **default** (gris) : niveau non testé
+   - **attempted** (jaune) : niveau essayé mais seuils non atteints
+   - **completed** (vert) : seuils atteints en mode apprentissage
+   - L'état `current` (mauve) se superpose à n'importe lequel des 3
+   - `attemptedLevels` tracké dans le store, marqué sur la première frappe via `_markAttempted()`
+   - Plus de logique de déverrouillage — `currentLevel` ne change plus automatiquement à la complétion
+
 ### Fichiers créés
 
 | Fichier | Rôle |
@@ -229,10 +237,10 @@ Reference: [PRD.md](PRD.md)
 ### Fichiers modifiés
 
 - `js/levels.js` — `generateTrainingText()` + `MIN_WORDS` + fix `includeAll` niveaux 6/7
-- `js/app.js` — mode `learning`/`training`, langue, `_generateText()`, tabs, language picker
-- `js/level-ui.js` — niveaux débloqués en training, info mode-aware
+- `js/app.js` — mode `learning`/`training`, langue, `_generateText()`, tabs, language picker, `attemptedLevels`, `_markAttempted()`
+- `js/level-ui.js` — tous niveaux cliquables, 3 états (default/attempted/completed), info mode-aware
 - `index.html` — tabs mode + language picker + layout picker refactorisé
-- `style.css` — styles mode tabs + picker refactorisé (`.picker-btn`, `.picker-menu`)
+- `style.css` — styles mode tabs + picker refactorisé (`.picker-btn`, `.picker-menu`) + `--yellow` + `.level-btn.attempted`
 
 ---
 

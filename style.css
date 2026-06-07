@@ -8,6 +8,7 @@
   --subtext0: #a6adc8;
   --red: #f38ba8;
   --green: #a6e3a1;
+  --yellow: #f9e2af;
   --mauve: #cba6f7;
 }
 
@@ -184,16 +185,11 @@ header {
   color: var(--overlay0);
   border: 1px solid var(--surface1);
   border-radius: 6px;
-  cursor: default;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.level-btn.unlocked {
-  color: var(--text);
-  cursor: pointer;
-}
-
-.level-btn.unlocked:hover {
+.level-btn:hover {
   background: var(--overlay0);
 }
 
@@ -201,6 +197,17 @@ header {
   background: var(--mauve);
   color: var(--base);
   border-color: var(--mauve);
+}
+
+.level-btn.attempted {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.level-btn.attempted.current {
+  background: var(--yellow);
+  color: var(--base);
+  border-color: var(--yellow);
 }
 
 .level-btn.completed {
@@ -212,11 +219,6 @@ header {
   background: var(--green);
   color: var(--base);
   border-color: var(--green);
-}
-
-.level-btn.locked {
-  opacity: 0.4;
-  cursor: default;
 }
 
 #level-info {

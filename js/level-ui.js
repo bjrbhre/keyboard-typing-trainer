@@ -15,26 +15,25 @@ export class LevelUI {
   render() {
     const currentLevel = this.app.currentLevel;
     const completedLevels = this.app.completedLevels;
-    const isTraining = this.app.mode === 'training';
+    const attemptedLevels = this.app.attemptedLevels;
 
     let navHtml = '';
     for (const spec of LEVEL_SPECS) {
       const isCompleted = completedLevels.includes(spec.id);
-      const isUnlocked = isTraining || spec.id <= currentLevel || isCompleted;
+      const isAttempted = attemptedLevels.includes(spec.id);
       const isCurrent = spec.id === currentLevel;
 
       let cls = 'level-btn';
       if (isCurrent) cls += ' current';
-      if (isCompleted && !isTraining) cls += ' completed';
-      if (isUnlocked && !isCurrent) cls += ' unlocked';
-      if (!isUnlocked) cls += ' locked';
+      if (isCompleted) cls += ' completed';
+      else if (isAttempted) cls += ' attempted';
 
-      navHtml += `<button class="${cls}" data-level="${spec.id}" ${isUnlocked ? '' : 'disabled'}>${spec.id}</button>`;
+      navHtml += `<button class="${cls}" data-level="${spec.id}">${spec.id}</button>`;
     }
     this.navEl.innerHTML = navHtml;
 
-    // Bind click events on unlocked buttons
-    this.navEl.querySelectorAll('.level-btn.unlocked, .level-btn.current, .level-btn.completed').forEach(btn => {
+    // Bind click events on all level buttons
+    this.navEl.querySelectorAll('.level-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const levelId = parseInt(btn.dataset.level);
         this.app.selectLevel(levelId);
