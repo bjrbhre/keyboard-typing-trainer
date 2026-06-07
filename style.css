@@ -322,11 +322,12 @@ main {
 }
 
 #text-display .drill-done {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
   gap: 0.3rem;
   text-align: center;
 }
