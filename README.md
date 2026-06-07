@@ -1,61 +1,58 @@
 # Keyboard Typing Trainer
 
-A standalone web app that teaches touch-typing through gradual progression, with a visual keyboard that keeps your eyes on the screen — not on your fingers.
+A standalone web app that teaches touch-typing through gradual progression — no account, no server, no dependencies. Open in a browser and type.
 
-No account, no server, no dependencies. Open in a browser and type.
+---
 
-## Features
+### 🗺️ How to read this codebase
 
-- **Learning mode** — 8 cumulative levels that introduce fingers and rows one at a time, with drills and validation thresholds
-- **Training mode** — real words filtered by available keys, in French or English
-- **Visual keyboard** — color-coded by finger, highlights the next key to press in real time
-- **QWERTY / AZERTY** — toggle between layouts; preference is saved
-- **Live stats** — speed (CPM) and success rate updated as you type
-- **Persistent progress** — levels completed, best scores, and preferences saved between sessions
+Start with **`index.html`** → it's the skeleton. Everything else wires into it.
 
-## Quick Start
-
-```sh
-make serve   # start dev server on port 8080
-make open    # open in browser
-make kill    # stop the server
-```
-
-Override the port: `make serve PORT=3000`
-
-> The app uses ES modules and must be served over HTTP (`file://` is blocked by CORS).
-
-## Architecture
-
-Zero dependencies, zero build step. Native ES modules served directly by an HTTP server.
+Then follow the **data flow**:
 
 ```
-index.html              # entry point, layout structure
-style.css               # Catppuccin Mocha theme, all styles
-js/
-  app.js                # orchestration, keyboard capture, mode switching
-  engine.js             # typing state machine (position, errors, events, stats)
-  keyboard.js           # layout data (QWERTY/AZERTY), finger→color mapping
-  keyboard-display.js   # visual keyboard rendering + highlight
-  levels.js             # level specs, drill generation, validation thresholds
-  level-ui.js           # level navigation bar + threshold display
-  stats.js              # CPM + success rate display
-  store.js              # localStorage abstraction (all persistence goes here)
-  ui.js                 # text display rendering + scroll
-  words-en.js           # English word corpus (~800 words)
-  words-fr.js           # French word corpus (~400 words)
+user keystroke
+  → textarea capture (js/app.js)
+  → Engine event (js/engine.js)
+  → UI re-render (js/ui.js, js/keyboard-display.js, js/level-ui.js, js/stats.js)
 ```
 
-### Key patterns
+**The engine is the heart.** `js/engine.js` is a state machine — it tracks cursor position, errors, backspace, and emits events (`correct`, `error`, `backspace`, `reset`, `finish`). UI components subscribe and render. **Never couple UI to engine internals.**
 
-- **Event-driven** — `Engine` emits events (`correct`, `error`, `backspace`, `reset`, `finish`); UI components subscribe and re-render. UI never queries engine internals.
-- **Catppuccin Mocha** — all colors via CSS variables in `:root`. No hardcoded colors.
-- **localStorage through `store.js`** — keys: `layout`, `language`, `currentLevel`, `completedLevels`, `attemptedLevels`, `scores`. Never access `localStorage` directly.
-- **Hidden textarea for input capture** — `<textarea id="input-capture">` captures keystrokes (required for WKWebView compatibility and robust focus handling), cleared after each keystroke.
+**`js/app.js`** is the orchestrator — it wires everything together, handles mode switching, and captures keyboard input via a hidden `<textarea>` (not `document.keydown`).
 
-## Levels
+---
 
-8 cumulative levels, each adding fingers or rows to the previous set:
+### 📂 File guide
+
+| File | What it does | ✨ Key insight |
+|------|-------------|---------------|
+| `js/engine.js` | Typing state machine | Emits events — UI subscribes, never queries |
+| `js/app.js` | Orchestration + input capture | Hidden textarea trick (WKWebView-safe focus) |
+| `js/levels.js` | Level specs + drill generation | 8 cumulative levels; drills switch to real words when enough keys exist |
+| `js/keyboard.js` | Layout data + finger→color | QWERTY and AZERTY as data, not DOM |
+| `js/keyboard-display.js` | Visual keyboard rendering | Highlight follows the cursor in real time |
+| `js/store.js` | localStorage abstraction | **All persistence goes here** — never touch `localStorage` directly |
+| `js/ui.js` | Text display + scroll | Full DOM render + programmatic `scrollTop` (no manual line-counting) |
+| `js/level-ui.js` | Level navigation bar | 3 states: default / attempted / completed |
+| `js/stats.js` | CPM + success rate display | Only correct keystrokes count toward CPM |
+| `js/words-en.js` | English word corpus | ~800 words, flat array, filtered at runtime |
+| `js/words-fr.js` | French word corpus | ~400 words, accents available only on AZERTY |
+
+---
+
+### 🏗️ Architecture rules
+
+- **🚫 No bundler, no dependencies** — native ES modules, served via HTTP
+- **🚫 No direct `localStorage`** — always through `js/store.js`
+- **🚫 No hardcoded colors** — always via `--var` from Catppuccin Mocha palette
+- **🚫 No UI↔engine coupling** — engine emits, UI subscribes
+
+---
+
+### 🎹 Levels
+
+8 cumulative levels, each adding fingers or rows to the previous set. All levels are accessible from the start.
 
 | # | Name | New keys |
 |---|------|----------|
@@ -68,20 +65,42 @@ js/
 | 7 | Bottom row | all bottom-row keys |
 | 8 | Full keyboard | all alphanumeric keys |
 
-All levels are accessible from the start. In **learning mode**, completing a level (meeting thresholds) marks it as completed. In **training mode**, there are no thresholds — just practice.
+**Learning mode** — complete a level by meeting the thresholds: **≥ 50 characters**, **≥ 90% success rate**, **≥ 20 CPM**.
 
-### Validation thresholds (learning mode)
+**Training mode** — no thresholds, just practice with real words filtered by available keys.
 
-To complete a level: **≥ 50 characters typed**, **≥ 90% success rate**, **≥ 20 CPM**.
+---
 
-## Layout & Language
+### 🌐 Layout & Language
 
-- **Layout picker** (globe icon below the keyboard) — switches QWERTY / AZERTY; the visual keyboard and drills adapt
+- **Layout picker** (globe icon) — switches QWERTY / AZERTY; the visual keyboard and drills adapt
 - **Language picker** (A↔à icon) — switches French / English word corpus (affects training mode only)
 
-## Design
+---
 
-Built with the [Catppuccin Mocha](https://catppuccin.com/) palette. Dark, warm, modern. Characters show three states as you type: correct (full color), upcoming (muted), error (red). The cursor blinks like a code editor.
+### 🎨 Visual identity
+
+**Catppuccin Mocha** everywhere — all colors via CSS variables in `:root`. Characters show 3 states as you type: ✅ correct (full color), 🔜 upcoming (muted), ❌ error (red). The cursor blinks like a code editor.
+
+---
+
+### 🚀 Quick Start
+
+```sh
+make serve   # HTTP server on :8080 (CORS blocks file://)
+make open    # opens in browser
+make kill    # stop the server
+```
+
+Override the port: `make serve PORT=3000`
+
+---
+
+### 📖 Deep dive
+
+- **`docs/PRD.md`** — product requirements and feature spec
+- **`docs/IMPLEMENTATION.md`** — implementation decisions, bug fixes, per-step history
+- **`docs/RFC-001.md`** — planned follow-ups
 
 ## License
 
