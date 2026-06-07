@@ -59,6 +59,12 @@ export class KeyboardDisplay {
     this._updateHighlight();
   }
 
+  clearHighlight() {
+    const prev = this.container.querySelector('.kb-key-active');
+    if (prev) prev.classList.remove('kb-key-active');
+    this.highlightedKey = null;
+  }
+
   _updateHighlight() {
     // Remove previous highlight
     const prev = this.container.querySelector('.kb-key-active');

@@ -22,8 +22,11 @@ class App {
     this.scores = store.get('scores') || {};
     this.levelCompleted = false;
 
-    // Mode: 'learning' or 'training'
+    // Mode: 'learning', 'training', or 'free'
     this.mode = 'learning';
+
+    // Free mode phase: 'input' or 'drill'
+    this.freePhase = 'input';
 
     // Language: 'en' or 'fr'
     this.language = store.get('language') || 'en';
@@ -72,28 +75,97 @@ class App {
   _initModeTabs() {
     const learningTab = document.getElementById('tab-learning');
     const trainingTab = document.getElementById('tab-training');
+    const freeTab = document.getElementById('tab-free');
 
     learningTab.addEventListener('click', () => {
-      this.mode = 'learning';
-      this._updateModeTabs();
-      this.selectLevel(this.currentLevel);
+      this._switchMode('learning');
     });
 
     trainingTab.addEventListener('click', () => {
-      this.mode = 'training';
-      this._updateModeTabs();
-      this.selectLevel(this.currentLevel);
+      this._switchMode('training');
+    });
+
+    freeTab.addEventListener('click', () => {
+      this._switchMode('free');
     });
 
     this._updateModeTabs();
   }
 
+  _switchMode(newMode) {
+    if (this.mode === newMode) return;
+
+    // Exit current mode
+    if (this.mode === 'free') {
+      this._exitFreeMode();
+    }
+
+    this.mode = newMode;
+
+    // Enter new mode
+    if (this.mode === 'free') {
+      this._enterFreeMode();
+    } else {
+      this._restoreNormalMode();
+    }
+
+    this._updateModeTabs();
+  }
+
+  _enterFreeMode() {
+    this.freePhase = 'input';
+
+    // Hide level bar nav, show free action button
+    const levelBar = document.getElementById('level-bar');
+    levelBar.classList.add('free-mode');
+    const freeAction = document.getElementById('free-action');
+    freeAction.classList.remove('hidden');
+    freeAction.disabled = true; // No textarea yet — disabled
+
+    // Hide language picker
+    document.getElementById('lang-toggle').classList.add('free-hidden');
+    document.getElementById('lang-menu').classList.add('free-hidden');
+
+    // Hide stats
+    document.getElementById('stats').classList.add('hidden');
+
+    // Keyboard display idle (no highlight)
+    this.keyboardDisplay.clearHighlight();
+
+    // Show placeholder in text-display
+    this.textDisplay.showFreePlaceholder();
+  }
+
+  _exitFreeMode() {
+    // Save text to store (for persistence in Step 4, just the slot for now)
+  }
+
+  _restoreNormalMode() {
+    // Show level bar nav, hide free action button
+    const levelBar = document.getElementById('level-bar');
+    levelBar.classList.remove('free-mode');
+    const freeAction = document.getElementById('free-action');
+    freeAction.classList.add('hidden');
+
+    // Show language picker
+    document.getElementById('lang-toggle').classList.remove('free-hidden');
+    document.getElementById('lang-menu').classList.remove('free-hidden');
+
+    // Show stats
+    document.getElementById('stats').classList.remove('hidden');
+
+    // Resume current level
+    this.selectLevel(this.currentLevel);
+  }
+
   _updateModeTabs() {
     const learningTab = document.getElementById('tab-learning');
     const trainingTab = document.getElementById('tab-training');
+    const freeTab = document.getElementById('tab-free');
 
     learningTab.classList.toggle('active', this.mode === 'learning');
     trainingTab.classList.toggle('active', this.mode === 'training');
+    freeTab.classList.toggle('active', this.mode === 'free');
   }
 
   _initLanguagePicker() {

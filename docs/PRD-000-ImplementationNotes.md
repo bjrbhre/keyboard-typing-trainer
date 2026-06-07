@@ -276,3 +276,44 @@ Voir [RFC-001.md](RFC-001.md) pour la liste des améliorations potentielles :
 | Majuscules / Shift | 🔴 Non traité | Les drills sont en minuscules. Pas de mécanisme Shift pour l'instant. |
 | Ponctuation dans les drills | 🟡 Partiel | Les niveaux avancés incluent ; , . / dans les touches, mais les drills ne les génèrent pas spécifiquement. |
 | Reset / Nouveau drill | ✅ Résolu | Entrée à la fin du drill lance un nouveau drill via `App.replayDrill()`. |
+
+---
+
+## PRD-001 — Mode Libre
+
+### Step 1 — Libre mode shell + visibility toggling ✅
+
+**Statut :** Terminée
+
+#### Ce qui a été implémenté
+
+- Onglet "Libre" dans `#mode-tabs` (3e tab, même style que Apprentissage/Entraînement)
+- État `mode === 'free'` + `freePhase: 'input' | 'drill'` sur l'instance App
+- `#level-bar` en mode Libre : `#level-nav` hidden, bouton action "Commencer · Ctrl+Entrée" visible (disabled)
+- Language picker hidden en mode Libre
+- Stats (`#stats`) hidden quand `mode === 'free'` et `freePhase === 'input'`
+- Keyboard display idle (no highlight) quand `freePhase === 'input'`
+- Placeholder "Tape ou colle ton texte ici…" dans `#text-display`
+- Mode switch : cliquer Apprentissage/Entraînement restore tout (level bar, lang picker, stats, keyboard highlights)
+
+#### Décisions prises pendant l'implémentation
+
+1. **CSS classes pour visibility toggling** — plutôt que `style.display` inline : `free-mode` sur `#level-bar`, `free-hidden` sur lang picker, `hidden` sur `#stats`. Plus maintenable, cohérent avec le pattern CSS existant.
+
+2. **`_enterFreeMode()` / `_exitFreeMode()` / `_restoreNormalMode()`** — trois méthodes distinctes pour les transitions. `_exitFreeMode()` est un hook pour la persistance (Step 4). `_restoreNormalMode()` rétablit tout et relance `selectLevel()`.
+
+3. **`KeyboardDisplay.clearHighlight()`** — nouvelle méthode pour retirer le highlight sans le réassigner. Utilisée quand le keyboard passe en idle en mode Libre.
+
+4. **`TextDisplay.showFreePlaceholder()`** — méthode dédiée pour afficher le placeholder, sans toucher au render() normal.
+
+5. **Bouton action disabled** — le bouton "Commencer · Ctrl+Entrée" est disabled car il n'y a pas encore de textarea (Step 2 ajoutera la validation).
+
+#### Fichiers modifiés
+
+| Fichier | Changement |
+|---|---|
+| `index.html` | Onglet Libre + bouton `#free-action` dans `#level-bar` |
+| `style.css` | Classes `.free-mode`, `.free-hidden`, `#free-action`, `.free-placeholder`, `#stats.hidden` |
+| `js/app.js` | Mode `'free'`, `freePhase`, `_enterFreeMode()`, `_exitFreeMode()`, `_restoreNormalMode()`, `_switchMode()` |
+| `js/ui.js` | Méthode `showFreePlaceholder()` |
+| `js/keyboard-display.js` | Méthode `clearHighlight()` |

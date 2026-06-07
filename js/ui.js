@@ -73,6 +73,11 @@ export class TextDisplay {
     `;
   }
 
+  showFreePlaceholder() {
+    this.container.classList.remove('drill-finished');
+    this.container.innerHTML = '<div class="free-placeholder">Tape ou colle ton texte ici…</div>';
+  }
+
   _scrollToCursor() {
     const cursorEl = this.container.querySelector('.cursor');
     if (!cursorEl) return;
