@@ -99,9 +99,13 @@ function generateStructuredDrill(chars, length) {
     for (let i = 0; i < groupSize; i++) {
       group += chars[Math.floor(Math.random() * chars.length)];
     }
-    text += group + ' ';
     lineLen += group.length + 1;
-    if (lineLen >= 30) { text += '\n'; lineLen = 0; }
+    if (lineLen >= 30) {
+      text += group + '\n';
+      lineLen = 0;
+    } else {
+      text += group + ' ';
+    }
   }
 
   return text.slice(0, length);
@@ -118,9 +122,13 @@ function generateRandomDrill(chars, length) {
     for (let i = 0; i < wordSize; i++) {
       word += chars[Math.floor(Math.random() * chars.length)];
     }
-    text += word + ' ';
     lineLen += word.length + 1;
-    if (lineLen >= 30) { text += '\n'; lineLen = 0; }
+    if (lineLen >= 30) {
+      text += word + '\n';
+      lineLen = 0;
+    } else {
+      text += word + ' ';
+    }
   }
 
   return text.slice(0, length);
