@@ -249,7 +249,7 @@ document.addEventListener('click', () => {
 });
 
 inputCapture.addEventListener('keydown', (e) => {
-  if (e.key === 'Backspace' || e.key === ' ') {
+  if (e.key === 'Backspace' || e.key === ' ' || e.key === 'Enter') {
     e.preventDefault();
   }
 
@@ -270,10 +270,13 @@ inputCapture.addEventListener('keydown', (e) => {
   };
   if (CODE_TO_KEY[key]) key = CODE_TO_KEY[key];
 
-  // Enter = replay drill when finished
-  if (key === 'Enter' && app.engine.finished) {
-    app.replayDrill();
-    return;
+  // Enter = replay drill when finished, otherwise pass as newline
+  if (key === 'Enter') {
+    if (app.engine.finished) {
+      app.replayDrill();
+      return;
+    }
+    // Engine will map Enter to \n
   }
 
   app.engine.handleKey(key);

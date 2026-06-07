@@ -90,6 +90,7 @@ function generateDrill(levelId, layout, length = 150) {
 
 function generateStructuredDrill(chars, length) {
   let text = '';
+  let lineLen = 0;
   const groupSizes = [2, 3, 4];
 
   while (text.length < length) {
@@ -99,6 +100,8 @@ function generateStructuredDrill(chars, length) {
       group += chars[Math.floor(Math.random() * chars.length)];
     }
     text += group + ' ';
+    lineLen += group.length + 1;
+    if (lineLen >= 30) { text += '\n'; lineLen = 0; }
   }
 
   return text.slice(0, length);
@@ -106,6 +109,7 @@ function generateStructuredDrill(chars, length) {
 
 function generateRandomDrill(chars, length) {
   let text = '';
+  let lineLen = 0;
   const wordsSizes = [3, 4, 5, 6, 7];
 
   while (text.length < length) {
@@ -115,6 +119,8 @@ function generateRandomDrill(chars, length) {
       word += chars[Math.floor(Math.random() * chars.length)];
     }
     text += word + ' ';
+    lineLen += word.length + 1;
+    if (lineLen >= 30) { text += '\n'; lineLen = 0; }
   }
 
   return text.slice(0, length);
@@ -138,16 +144,16 @@ function generateTrainingText(levelId, layout, language = 'en', length = 150) {
   if (filtered.length < MIN_WORDS) return null;
 
   let text = '';
+  let lineLen = 0;
   const sentenceSizes = [3, 4, 5, 6];
 
   while (text.length < length) {
-    // Build a pseudo-phrase of 3–6 words
     const sentenceLen = sentenceSizes[Math.floor(Math.random() * sentenceSizes.length)];
     const words = [];
     for (let i = 0; i < sentenceLen; i++) {
       words.push(filtered[Math.floor(Math.random() * filtered.length)]);
     }
-    text += words.join(' ') + ' ';
+    text += words.join(' ') + '\n';
   }
 
   return text.slice(0, length);

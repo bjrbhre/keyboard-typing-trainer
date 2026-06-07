@@ -266,7 +266,7 @@ main {
   height: 7.5rem;
   overflow-y: auto;
   scrollbar-width: none;          /* Firefox */
-  word-break: break-all;
+  word-break: keep-all;
   position: relative;
   user-select: none;
 }
@@ -315,6 +315,15 @@ main {
 #text-display .char.correct { color: var(--text); }
 #text-display .char.upcoming { color: var(--overlay0); }
 #text-display .char.error { color: var(--red); }
+
+#text-display .newline-char {
+  font-size: 0.85em;
+  letter-spacing: 0;
+  margin-right: 0.3em;
+}
+
+#text-display .newline-char.upcoming { color: var(--overlay0); }
+#text-display .newline-char.error { color: var(--red); }
 
 #text-display .char.cursor::before {
   content: '';

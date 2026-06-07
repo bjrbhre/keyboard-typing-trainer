@@ -44,6 +44,9 @@ export class Engine {
       return;
     }
 
+    // Map Enter to newline character
+    if (key === 'Enter') key = '\n';
+
     // Ignore non-character keys (shift, ctrl, alt, meta, etc.)
     if (key.length !== 1) return;
 

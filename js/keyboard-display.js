@@ -39,8 +39,8 @@ export class KeyboardDisplay {
 
       for (const key of row) {
         const color = FINGER_COLORS[key.finger];
-        const label = key.char === ' ' ? '' : key.char;
-        const dataChar = key.char === ' ' ? ' ' : key.char;
+        const label = key.label || (key.char === ' ' ? '' : key.char);
+        const dataChar = key.char;
         const widthClass = key.width > 1 ? `kb-key-wide` : '';
 
         html += `<div class="kb-key ${widthClass}" 
@@ -68,7 +68,9 @@ export class KeyboardDisplay {
     if (this.engine.position >= this.engine.text.length || this.engine.finished) return;
 
     const nextChar = this.engine.text[this.engine.position];
-    const keyEl = this.container.querySelector(`[data-char="${CSS.escape(nextChar)}"]`);
+    // Map newline to ↵ for data-char selector
+    const charForSelector = nextChar === '\n' ? '↵' : nextChar;
+    const keyEl = this.container.querySelector(`[data-char="${CSS.escape(charForSelector)}"]`);
 
     if (keyEl) {
       keyEl.classList.add('kb-key-active');
@@ -81,11 +83,13 @@ export class KeyboardDisplay {
       case '<': return '&lt;';
       case '>': return '&gt;';
       case '"': return '&quot;';
+      case '\n': return '↵';
       default: return ch;
     }
   }
 
   _escapeAttr(ch) {
+    if (ch === '\n') return '↵';
     return ch.replace(/"/g, '&quot;').replace(/\\/g, '\\\\');
   }
 }

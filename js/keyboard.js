@@ -77,6 +77,7 @@ const QWERTY = {
       { char: ',', finger: 'rightMiddle', width: 1 },
       { char: '.', finger: 'rightRing',  width: 1 },
       { char: '/', finger: 'rightPinky', width: 1 },
+      { char: '\n', finger: 'rightPinky', width: 2, label: '↵' },
     ],
     // Row 4 — space bar
     [
@@ -146,6 +147,7 @@ const AZERTY = {
       { char: ';', finger: 'rightMiddle', width: 1 },
       { char: ':', finger: 'rightRing',  width: 1 },
       { char: '!', finger: 'rightPinky', width: 1 },
+      { char: '\n', finger: 'rightPinky', width: 2, label: '↵' },
     ],
     // Row 4 — space bar
     [

@@ -1,9 +1,9 @@
 /**
- * UI — renders the text display with cursor, colors, and errors
+ * UI — renders the text display with cursor, colors, errors, and line breaks
  *
- * Renders all characters into the DOM, then scrolls the container
- * so the cursor stays on the 2nd visible line — the browser handles
- * line-wrapping, so no CHARS_PER_LINE guesswork needed.
+ * Renders all characters into the DOM. Newline characters (\n) are shown
+ * as ↵ when upcoming/error, or as <br> when correctly typed.
+ * Scrolls so the cursor stays on the 2nd visible line.
  */
 
 export class TextDisplay {
@@ -34,14 +34,27 @@ export class TextDisplay {
     for (let i = 0; i < text.length; i++) {
       const status = this.engine.getStatus(i);
       const isCursor = this.engine.isCursor(i);
+      const ch = text[i];
+
+      // Newline characters: ↵ or <br>
+      if (ch === '\n') {
+        if (status === 'correct') {
+          // Correctly typed newline → actual line break
+          html += '<br>';
+        } else {
+          // Upcoming or error → show ↵ symbol
+          let cls = 'char newline-char ' + status;
+          if (isCursor) cls += ' cursor';
+          html += `<span class="${cls}">↵</span><br>`;
+        }
+        continue;
+      }
 
       let cls = 'char ' + status;
       if (isCursor) cls += ' cursor';
 
-      let ch = text[i];
-      if (ch === ' ') ch = '\u00A0';
-
-      html += `<span class="${cls}">${this._escape(ch)}</span>`;
+      const display = ch === ' ' ? '\u00A0' : ch;
+      html += `<span class="${cls}">${this._escape(display)}</span>`;
     }
 
     this.container.innerHTML = html;
