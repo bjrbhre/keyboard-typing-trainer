@@ -307,7 +307,8 @@ main {
   height: 7.5rem;
   overflow-y: auto;
   scrollbar-width: none;          /* Firefox */
-  word-break: break-all;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
   position: relative;
   user-select: none;
 }

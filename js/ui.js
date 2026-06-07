@@ -56,7 +56,7 @@ export class TextDisplay {
       let cls = 'char ' + status;
       if (isCursor) cls += ' cursor';
 
-      const display = ch === ' ' ? '\u00A0' : ch;
+      const display = ch;
       html += `<span class="${cls}">${this._escape(display)}</span>`;
     }
 
