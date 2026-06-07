@@ -98,6 +98,13 @@ class App {
     this.levelUI.render();
   }
 
+  replayDrill() {
+    this.levelCompleted = false;
+    const text = generateDrill(this.currentLevel, this.layout);
+    this.engine.reset(text);
+    this.levelUI.render();
+  }
+
   _checkLevelCompletion() {
     if (this.levelCompleted) return;
 
@@ -167,6 +174,12 @@ inputCapture.addEventListener('keydown', (e) => {
     Backquote:'`',Quote:"'",IntlBackslash:'\\',
   };
   if (CODE_TO_KEY[key]) key = CODE_TO_KEY[key];
+
+  // Enter = replay drill when finished
+  if (key === 'Enter' && app.engine.finished) {
+    app.replayDrill();
+    return;
+  }
 
   app.engine.handleKey(key);
   // Clear textarea so it never accumulates text

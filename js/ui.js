@@ -23,6 +23,13 @@ export class TextDisplay {
   render() {
     const text = this.engine.text;
 
+    if (this.engine.finished) {
+      this._renderFinished();
+      return;
+    }
+
+    this.container.classList.remove('drill-finished');
+
     let html = '';
     for (let i = 0; i < text.length; i++) {
       const status = this.engine.getStatus(i);
@@ -39,6 +46,18 @@ export class TextDisplay {
 
     this.container.innerHTML = html;
     this._scrollToCursor();
+  }
+
+  _renderFinished() {
+    const stats = this.engine.getStats();
+    this.container.classList.add('drill-finished');
+    this.container.innerHTML = `
+      <div class="drill-done">
+        <div class="drill-done-title">Drill terminé</div>
+        <div class="drill-done-stats">${stats.cpm} CPM · ${stats.successRate}% succès</div>
+        <div class="drill-done-hint">Appuie sur Entrée pour un nouveau drill</div>
+      </div>
+    `;
   }
 
   _scrollToCursor() {

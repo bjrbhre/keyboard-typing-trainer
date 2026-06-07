@@ -164,6 +164,12 @@ Reference: [PRD.md](PRD.md)
    - Vider le textarea après chaque frappe
    - Bonus UX : plus robuste même en utilisation normale (pas de perte de focus si clic hors zone)
 
+8. **Feedback de fin de drill** — quand le drill est terminé :
+   - Le CPM décroissait car `getStats()` divisait par un `elapsed` qui continuait à croître. Corrigé en enregistrant `finishTime` quand `finished = true` et en l'utilisant au lieu de `Date.now()` dans `getStats()`.
+   - Le text-display affiche un écran de complétion : titre vert, stats figées, hint "Appuie sur Entrée pour un nouveau drill".
+   - Bordure verte sur le conteneur (`#text-display.drill-finished`).
+   - `App.replayDrill()` : génère un nouveau drill pour le niveau courant et reset l'engine. Résout aussi le besoin de bouton "Replay".
+
 ### Fichiers créés
 
 | Fichier | Rôle |
@@ -225,4 +231,4 @@ Reference: [PRD.md](PRD.md)
 | Mots réels dans les premiers niveaux | 🔴 Bloqué par étape 5 | Les premiers niveaux n'ont que des drills (décision B du grill). Les mots réels arrivent naturellement avec plus de touches. |
 | Majuscules / Shift | 🔴 Non traité | Les drills sont en minuscules. Pas de mécanisme Shift pour l'instant. |
 | Ponctuation dans les drills | 🟡 Partiel | Les niveaux avancés incluent ; , . / dans les touches, mais les drills ne les génèrent pas spécifiquement. |
-| Reset / Nouveau drill | 🟡 Partiel | On peut changer de niveau mais pas relancer le même drill sans recommencer. Un bouton "Replay" serait utile. |
+| Reset / Nouveau drill | ✅ Résolu | Entrée à la fin du drill lance un nouveau drill via `App.replayDrill()`. |

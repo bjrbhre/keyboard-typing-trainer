@@ -69,6 +69,7 @@ export class Engine {
     // Check if finished
     if (this.position >= this.text.length) {
       this.finished = true;
+      this.finishTime = Date.now();
       this._emit({ type: 'finish' });
     }
   }
@@ -85,8 +86,10 @@ export class Engine {
   }
 
   getStats() {
+    // Freeze elapsed time once finished so CPM doesn't decay
+    const endTime = this.finished ? this.finishTime : Date.now();
     const elapsed = this.startTime
-      ? (Date.now() - this.startTime) / 1000 / 60
+      ? (endTime - this.startTime) / 1000 / 60
       : 0;
 
     const cpm = elapsed > 0
@@ -109,6 +112,7 @@ export class Engine {
     this.correctKeystrokes = 0;
     this.startTime = null;
     this.finished = false;
+    this.finishTime = null;
     this._emit({ type: 'reset' });
   }
 }
