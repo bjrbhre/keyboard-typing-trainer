@@ -155,9 +155,9 @@ class App {
       freeAction.disabled = this._freeTextarea.value.trim().length < 5;
     });
 
-    // Ctrl+Enter shortcut on textarea
+    // Ctrl/Cmd+Enter shortcut on textarea
     this._freeTextarea.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.key === 'Enter') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         if (!freeAction.disabled) {
           this._startFreeDrill();
@@ -222,7 +222,7 @@ class App {
     });
 
     this._freeTextarea.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.key === 'Enter') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         if (!freeAction.disabled) {
           this._startFreeDrill();
