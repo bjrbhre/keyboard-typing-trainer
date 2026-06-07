@@ -386,3 +386,43 @@ Voir [RFC-001.md](RFC-001.md) pour la liste des améliorations potentielles :
 |---|---|
 | `js/app.js` | `_startFreeDrill()` complet, `_returnToFreeInput()`, `_freeText`, `replayDrill()` mode-aware, bouton dual-role, `customHint` |
 | `js/ui.js` | `_renderFinished()` avec `customHint` optionnel |
+
+### Step 4 — Esc, "Modifier le texte", and persistence ✅
+
+**Statut :** Terminée
+
+#### Ce qui a été implémenté
+
+- **Esc pendant le drill** — keydown handler sur `#input-capture` : si `mode === 'free'` et `freePhase === 'drill'`, appelle `_returnToFreeInput()`. Le handler est avant le handler Enter, donc Esc est intercepté en premier.
+- **`store.set('lastFreeText')`** — sauvegardé dans `_startFreeDrill()` quand le drill commence, et dans `_exitFreeMode()` quand on quitte le mode Libre.
+- **`_enterFreeMode()`** — pré-remplit le textarea depuis `store.get('lastFreeText')` si disponible. Active/désactive le bouton selon la longueur.
+- **Page refresh** — `lastFreeText` persisté dans localStorage. Au retour en mode Libre après un refresh, le textarea est pré-rempli.
+- **Bouton "Modifier le texte · Echap"** — le label du bouton en phase drill mentionne le raccourci Esc, symétrique avec "Commencer · Ctrl+Entrée".
+- **Curseur en fin de texte** — quand le textarea est pré-rempli (`_enterFreeMode` et `_returnToFreeInput`), `selectionStart`/`selectionEnd` sont positionnés à la fin pour éviter que le curseur n'apparaisse au milieu d'un texte scrollé.
+
+#### Décisions prises pendant l'implémentation
+
+1. **Esc vs Pause (RFC §12)** — Esc en mode Libre = retour à l'édition, pas pause. C'est conforme à la PRD (Q3 : "Esc is for editing text, not for pause/resume"). La pause reste un follow-up séparé.
+
+2. **Sauvegarde dans `_exitFreeMode()`** — on sauve le texte en quittant le mode Libre, quelle que soit la phase (input ou drill). Cela couvre le cas où l'utilisateur modifie le texte dans le textarea puis switch de mode sans Commencer.
+
+3. **Curseur en fin de texte** — `textarea.value = text` place le curseur au début par défaut. Sur un texte long qui dépasse le conteneur, le scroll reste au milieu et le curseur est invisible. Forcer `selectionStart = selectionEnd = len` place le curseur à la fin et scroll le textarea pour le rendre visible.
+
+#### Fichiers modifiés
+
+| Fichier | Changement |
+|---|---|
+| `js/app.js` | Esc handler, `store.set('lastFreeText')`, pré-remplissage store, curseur en fin, label bouton "· Echap" |
+
+---
+
+### Bugs corrigés pendant l'implémentation de PRD-001
+
+| Bug | Cause | Fix |
+|---|---|---|
+| Text wrapping cassé : le texte disparaît après ~40 chars | `word-break: keep-all` empêche le wrapping des `<span>` inline | `word-break: break-all` puis finalement `overflow-wrap: break-word` + `white-space: pre-wrap` pour préserver les frontières de mots |
+| Mots coupés au milieu ("doucement" → "douceme\nnt") | `word-break: break-all` coupe n'importe où + espaces en `\u00A0` (non-breaking) empêchent le browser de reconnaître les limites de mots | Remplacer `\u00A0` par des espaces normales dans `TextDisplay.render()` + `overflow-wrap: break-word` coupe seulement si un mot dépasse la ligne |
+| Terminé screen pas centré dans le conteneur pour les textes longs | `.drill-done` avec `height: 100%` ne résout pas dans un conteneur `overflow-y: auto` ; le scroll reste au milieu | `position: absolute; inset: 0;` pour que le Terminé remplisse toujours le viewport visible du conteneur, + `scrollTop = 0` après render |
+| Ctrl+Enter ne fonctionne pas sur macOS | macOS utilise ⌘ Cmd, pas Ctrl, pour les raccourcis clavier | Ajouter `e.metaKey` en plus de `e.ctrlKey` dans le keydown handler du textarea |
+| Textarea écrasé par `TextDisplay.render()` en mode Libre | Le `engine.reset()` (via `_restoreNormalMode → selectLevel`) émet un event `reset` qui trigger `render()`, écrasant le textarea | Ajouter `_freeInputMode` flag sur TextDisplay, guard dans `render()` : `if (this._freeInputMode) return` |
+| Curseur textarea au milieu du texte scrollé après pré-remplissage | `textarea.value = text` place le curseur au début, mais le scroll reste dans un état antérieur | Forcer `selectionStart = selectionEnd = value.length` + `focus()` après le set de value |
