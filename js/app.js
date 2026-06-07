@@ -126,9 +126,6 @@ class App {
     document.getElementById('lang-toggle').classList.add('free-hidden');
     document.getElementById('lang-menu').classList.add('free-hidden');
 
-    // Hide stats
-    document.getElementById('stats').classList.add('hidden');
-
     // Keyboard display idle (no highlight)
     this.keyboardDisplay.clearHighlight();
 
@@ -150,9 +147,6 @@ class App {
     // Show language picker
     document.getElementById('lang-toggle').classList.remove('free-hidden');
     document.getElementById('lang-menu').classList.remove('free-hidden');
-
-    // Show stats
-    document.getElementById('stats').classList.remove('hidden');
 
     // Resume current level
     this.selectLevel(this.currentLevel);
