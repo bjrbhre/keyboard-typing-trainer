@@ -276,10 +276,3 @@ Voir [RFC-001.md](RFC-001.md) pour la liste des améliorations potentielles :
 | Majuscules / Shift | 🔴 Non traité | Les drills sont en minuscules. Pas de mécanisme Shift pour l'instant. |
 | Ponctuation dans les drills | 🟡 Partiel | Les niveaux avancés incluent ; , . / dans les touches, mais les drills ne les génèrent pas spécifiquement. |
 | Reset / Nouveau drill | ✅ Résolu | Entrée à la fin du drill lance un nouveau drill via `App.replayDrill()`. |
-
----
-
-
-## PRD-001 — Mode Libre
-
-Voir [PRD-001-ImplementationNotes.md](PRD-001-ImplementationNotes.md).
