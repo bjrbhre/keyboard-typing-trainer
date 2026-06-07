@@ -1,12 +1,10 @@
 /**
  * UI — renders the text display with cursor, colors, and errors
  *
- * Renders all text but the container clips to 2 lines with overflow hidden.
- * We track which line the cursor is on and only render from the start of
- * the previous line, giving a natural scrolling feel.
+ * Renders all characters into the DOM, then scrolls the container
+ * so the cursor stays on the 2nd visible line — the browser handles
+ * line-wrapping, so no CHARS_PER_LINE guesswork needed.
  */
-
-const CHARS_PER_LINE = 50;
 
 export class TextDisplay {
   constructor(engine) {
@@ -24,20 +22,9 @@ export class TextDisplay {
 
   render() {
     const text = this.engine.text;
-    const pos = this.engine.position;
-
-    // Figure out which "line" the cursor is on
-    const cursorLine = Math.floor(pos / CHARS_PER_LINE);
-
-    // Start rendering from one line before the cursor line
-    const startLine = Math.max(0, cursorLine - 1);
-    const renderStart = startLine * CHARS_PER_LINE;
-
-    // Render 3 lines worth (previous, current, next)
-    const renderEnd = Math.min(text.length, renderStart + CHARS_PER_LINE * 3);
 
     let html = '';
-    for (let i = renderStart; i < renderEnd; i++) {
+    for (let i = 0; i < text.length; i++) {
       const status = this.engine.getStatus(i);
       const isCursor = this.engine.isCursor(i);
 
@@ -51,6 +38,24 @@ export class TextDisplay {
     }
 
     this.container.innerHTML = html;
+    this._scrollToCursor();
+  }
+
+  _scrollToCursor() {
+    const cursorEl = this.container.querySelector('.cursor');
+    if (!cursorEl) return;
+
+    const containerRect = this.container.getBoundingClientRect();
+    const cursorRect = cursorEl.getBoundingClientRect();
+
+    // Cursor position relative to the scrollable content
+    const cursorRelTop = cursorRect.top - containerRect.top + this.container.scrollTop;
+
+    // Line height in pixels (computed from CSS line-height)
+    const lineHeight = parseFloat(getComputedStyle(this.container).lineHeight);
+
+    // Keep cursor on the 2nd visible line (1 line of context above)
+    this.container.scrollTop = Math.max(0, cursorRelTop - lineHeight);
   }
 
   _escape(ch) {

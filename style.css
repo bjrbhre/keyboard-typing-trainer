@@ -41,7 +41,18 @@ header h1 {
   letter-spacing: 0.02em;
 }
 
-/* ── Layout Picker ── */
+/* ── Hidden input capture ── */
+#input-capture {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 0;
+  pointer-events: none;
+}
 .layout-picker {
   position: absolute;
   bottom: 0.75rem;
@@ -212,10 +223,16 @@ main {
   padding: 2rem;
   background: var(--surface0);
   border-radius: 12px;
-  min-height: 120px;
-  max-height: 7.5rem;
-  overflow: hidden;
+  height: 7.5rem;
+  overflow-y: auto;
+  scrollbar-width: none;          /* Firefox */
+  word-break: break-all;
+  position: relative;
   user-select: none;
+}
+
+#text-display::-webkit-scrollbar {
+  display: none;                  /* Chrome, Safari, WKWebView */
 }
 
 #text-display .char {

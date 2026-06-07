@@ -144,11 +144,25 @@ Reference: [PRD.md](PRD.md)
    - **Structured drill** (≤4 touches) : groupes de 2-3-4 caractères séparés par des espaces (`fj fj fjj ff`)
    - **Random drill** (>4 touches) : pseudo-mots de 3-7 caractères séparés par des espaces
 
-3. **Texte qui déborde** — le texte généré (150 car.) débordait du conteneur. Solution : fenêtre glissante de ~3 lignes autour du curseur, `overflow: hidden` + `max-height: 7.5rem`. Effet de défilement naturel.
+3. **Texte qui déborde** — le texte généré (150 car.) débordait du conteneur. Solution initiale : fenêtre glissante de ~3 lignes autour du curseur, `overflow: hidden` + `max-height: 7.5rem`. **Cette approche avait un bug** (voir § Bug fix ci-dessous). Remplacée par un rendu complet + scroll programmatique.
 
 4. **Architecture modulaire** — le PRD avait `ui.js` comme monolithe (clavier + texte + curseur + stats + sélecteur). L'implémentation sépare en `ui.js` + `keyboard-display.js` + `level-ui.js` + `stats.js`. Plus propre.
 
 5. **CPM = correctKeystrokes / elapsed** — les erreurs ne comptent pas dans la vitesse. Seuls les caractères correctement tapés sont comptés.
+
+6. **Bug fix : scroll du texte (approche C — scrollTop fluide)** — la fenêtre glissante initiale (`CHARS_PER_LINE = 50`) était fausse : en réalité ~42 caractères par ligne avec la police/conteneur utilisés. Le curseur sortait du conteneur à ~40 caractères. La correction :
+   - Suppression de `CHARS_PER_LINE` et de la logique de rendu partiel
+   - Rendu complet de tous les caractères dans le DOM
+   - `_scrollToCursor()` : après chaque render, positionne `scrollTop` pour maintenir le curseur sur la 2ème ligne visible
+   - CSS : `height: 7.5rem` (fixe) + `overflow-y: auto` (scrollable programmatiquement) + `scrollbar-width: none` / `::-webkit-scrollbar { display: none }` (scrollbar masquée) + `word-break: break-all` (forcer le wrapping des `<span>` inline pour générer un vrai `scrollHeight`)
+   - Le navigateur gère le line-wrapping, pas de calcul manuel
+
+7. **Textarea caché pour la capture clavier** — les événements `keydown` sur `document` ne fonctionnent pas dans WKWebView (cmux browser). Ajout d'un `<textarea id="input-capture">` invisible mais focusable :
+   - Auto-focus au chargement, re-focus sur chaque clic
+   - `keydown` écouté sur le textarea au lieu de `document`
+   - Mapping `CODE_TO_KEY` pour les événements synthétiques WKWebView (`KeyF` → `f`)
+   - Vider le textarea après chaque frappe
+   - Bonus UX : plus robuste même en utilisation normale (pas de perte de focus si clic hors zone)
 
 ### Fichiers créés
 
@@ -161,8 +175,10 @@ Reference: [PRD.md](PRD.md)
 
 - `index.html` — barre de niveaux
 - `style.css` — styles niveaux
-- `js/ui.js` — fenêtre glissante (3 lignes)
-- `js/app.js` — classe App avec logique de niveaux
+- `js/ui.js` — rendu complet + scroll programmatique (`_scrollToCursor`)
+- `js/app.js` — classe App avec logique de niveaux + textarea caché pour capture clavier
+- `style.css` — styles niveaux + fix scroll text-display
+- `index.html` — barre de niveaux + textarea caché
 
 ---
 

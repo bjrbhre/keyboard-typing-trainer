@@ -137,10 +137,38 @@ class App {
 // Boot
 const app = new App();
 
-// Capture keyboard input
-document.addEventListener('keydown', (e) => {
+// Capture keyboard input via hidden textarea
+const inputCapture = document.getElementById('input-capture');
+inputCapture.focus();
+
+// Re-focus on any click so we never lose capture
+document.addEventListener('click', () => {
+  inputCapture.focus();
+});
+
+inputCapture.addEventListener('keydown', (e) => {
   if (e.key === 'Backspace' || e.key === ' ') {
     e.preventDefault();
   }
-  app.engine.handleKey(e.key);
+
+  // WKWebView synthetic events (e.g. cmux press) put the code name
+  // in e.key ("KeyF" instead of "f"). Map them to real key values.
+  let key = e.key;
+  const CODE_TO_KEY = {
+    KeyA:'a',KeyB:'b',KeyC:'c',KeyD:'d',KeyE:'e',KeyF:'f',KeyG:'g',
+    KeyH:'h',KeyI:'i',KeyJ:'j',KeyK:'k',KeyL:'l',KeyM:'m',KeyN:'n',
+    KeyO:'o',KeyP:'p',KeyQ:'q',KeyR:'r',KeyS:'s',KeyT:'t',KeyU:'u',
+    KeyV:'v',KeyW:'w',KeyX:'x',KeyY:'y',KeyZ:'z',
+    Digit0:'0',Digit1:'1',Digit2:'2',Digit3:'3',Digit4:'4',
+    Digit5:'5',Digit6:'6',Digit7:'7',Digit8:'8',Digit9:'9',
+    Space:' ',Backspace:'Backspace',
+    Semicolon:';',Equal:'=',Comma:',',Minus:'-',Period:'.',
+    Slash:'/',BracketLeft:'[',BracketRight:']',Backslash:'\\',
+    Backquote:'`',Quote:"'",IntlBackslash:'\\',
+  };
+  if (CODE_TO_KEY[key]) key = CODE_TO_KEY[key];
+
+  app.engine.handleKey(key);
+  // Clear textarea so it never accumulates text
+  inputCapture.value = '';
 });
