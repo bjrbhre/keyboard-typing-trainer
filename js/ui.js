@@ -67,11 +67,12 @@ export class TextDisplay {
   _renderFinished() {
     const stats = this.engine.getStats();
     this.container.classList.add('drill-finished');
+    const hint = this.customHint || 'Appuie sur Entrée pour un nouveau drill';
     this.container.innerHTML = `
       <div class="drill-done">
         <div class="drill-done-title">Terminé</div>
         <div class="drill-done-stats">${stats.cpm} CPM · ${stats.successRate}% succès</div>
-        <div class="drill-done-hint">Appuie sur Entrée pour un nouveau drill</div>
+        <div class="drill-done-hint">${hint}</div>
       </div>
     `;
   }

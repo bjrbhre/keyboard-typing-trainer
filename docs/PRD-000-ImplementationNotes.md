@@ -353,3 +353,36 @@ Voir [RFC-001.md](RFC-001.md) pour la liste des améliorations potentielles :
 | `js/app.js` | `_freeInputActive`, `_freeTextarea`, validation input, Ctrl+Enter, `_startFreeDrill()`, click handler bouton, guard re-focus |
 | `js/ui.js` | `showFreeTextarea()` remplace `showFreePlaceholder()`, `showDrill()`, guard `_freeInputMode` dans `render()` |
 | `style.css` | `.free-textarea` styles (remplace `.free-placeholder`) |
+
+### Step 3 — Drill phase: the complete loop ✅
+
+**Statut :** Terminée
+
+#### Ce qui a été implémenté
+
+- "Commencer" clique ou Ctrl+Enter : `.trim()` le texte → `engine.reset(trimmedText)`, `freePhase = 'drill'`
+- Phase switch → drill : textarea hidden, `#text-display` montre le drill, `#input-capture` re-focus, keyboard highlight actif
+- Action button change de label : "Commencer · Ctrl+Entrée" → "Modifier le texte"
+- Terminé screen custom hint : "Entrée = recommencer · Esc = modifier le texte"
+- Replay (Enter) : `replayDrill()` en mode libre rejoue le **même** texte (pas de régénération)
+- Bouton "Modifier le texte" : retour à la phase input avec textarea pré-rempli
+- `_returnToFreeInput()` : restaure le textarea avec le texte du drill, keyboard idle, button label reset
+
+#### Décisions prises pendant l'implémentation
+
+1. **`_freeText` stocké sur App** — le texte trimmé est sauvegardé dans `this._freeText` pour le replay et le pré-remplissage. Pas de store.js encore (Step 4).
+
+2. **`TextDisplay.customHint`** — propriété optionnelle sur TextDisplay pour remplacer le hint du Terminé screen. Set à la string libre en mode free, `null` en mode normal. Évite de passer une ref App → TextDisplay.
+
+3. **Dual-role du bouton action** — le même `#free-action` bouton sert les deux phases. Le click handler branche sur `freePhase` pour appeler `_startFreeDrill()` ou `_returnToFreeInput()`. Le label change dynamiquement.
+
+4. **`replayDrill()` mode-aware** — en mode free, reset avec `_freeText` (même texte). En mode learning/training, régénère le texte via `_generateText()`.
+
+5. **Caractères non trouvables sur le keyboard** — aucun handling spécial. Le keyboard highlight cherche la clé via `data-char`, s'il ne la trouve pas, pas de highlight. Le curseur avance normalement (erreur = avance). Testé avec 'L' majuscule — pas de highlight, erreur enregistrée, curseur avance.
+
+#### Fichiers modifiés
+
+| Fichier | Changement |
+|---|---|
+| `js/app.js` | `_startFreeDrill()` complet, `_returnToFreeInput()`, `_freeText`, `replayDrill()` mode-aware, bouton dual-role, `customHint` |
+| `js/ui.js` | `_renderFinished()` avec `customHint` optionnel |

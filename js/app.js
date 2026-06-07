@@ -69,10 +69,14 @@ class App {
     // Mode tabs
     this._initModeTabs();
 
-    // Free action button click handler
+    // Free action button click handler (dual role: Commencer or Modifier le texte)
     document.getElementById('free-action').addEventListener('click', () => {
-      if (!this._freeInputActive) return;
-      this._startFreeDrill();
+      if (this.mode !== 'free') return;
+      if (this.freePhase === 'input') {
+        this._startFreeDrill();
+      } else {
+        this._returnToFreeInput();
+      }
     });
   }
 
@@ -170,11 +174,65 @@ class App {
   _exitFreeMode() {
     this._freeInputActive = false;
     this._freeTextarea = null;
+    this._freeText = null;
   }
 
   _startFreeDrill() {
-    // Placeholder for Step 3 — currently a console log
-    console.log('Free drill would start with:', this._freeTextarea.value.trim());
+    const trimmedText = this._freeTextarea.value.trim();
+    if (trimmedText.length < 5) return;
+
+    // Store the free text for replay
+    this._freeText = trimmedText;
+    this.freePhase = 'drill';
+    this._freeInputActive = false;
+
+    // Load text into engine
+    this.textDisplay.showDrill();
+    this.textDisplay.customHint = 'Entrée = recommencer · Esc = modifier le texte';
+    this.engine.reset(trimmedText);
+
+    // Re-focus #input-capture for typing
+    document.getElementById('input-capture').focus();
+
+    // Update action button: "Modifier le texte"
+    const freeAction = document.getElementById('free-action');
+    freeAction.disabled = false;
+    freeAction.textContent = 'Modifier le texte';
+  }
+
+  _returnToFreeInput() {
+    // Switch back to input phase with textarea pre-filled
+    this.freePhase = 'input';
+    this._freeInputActive = true;
+
+    // Keyboard display idle
+    this.keyboardDisplay.clearHighlight();
+
+    // Show textarea pre-filled with the drill text
+    this._freeTextarea = this.textDisplay.showFreeTextarea();
+    this._freeTextarea.value = this._freeText || '';
+
+    // Re-enable validation + Ctrl+Enter on the new textarea
+    const freeAction = document.getElementById('free-action');
+    freeAction.textContent = 'Commencer · Ctrl+Entrée';
+    freeAction.disabled = this._freeTextarea.value.trim().length < 5;
+
+    this._freeTextarea.addEventListener('input', () => {
+      freeAction.disabled = this._freeTextarea.value.trim().length < 5;
+    });
+
+    this._freeTextarea.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        if (!freeAction.disabled) {
+          this._startFreeDrill();
+        }
+      }
+    });
+
+    this._freeTextarea.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
   }
 
   _restoreNormalMode() {
@@ -189,6 +247,7 @@ class App {
     document.getElementById('lang-menu').classList.remove('free-hidden');
 
     // Exit free input mode in TextDisplay so render() works again
+    this.textDisplay.customHint = null;
     this.textDisplay.showDrill();
 
     // Resume current level
@@ -306,9 +365,15 @@ class App {
 
   replayDrill() {
     this.levelCompleted = false;
-    const text = this._generateText();
-    this.engine.reset(text);
-    this.levelUI.render();
+
+    if (this.mode === 'free') {
+      // In free mode, replay the same text
+      this.engine.reset(this._freeText);
+    } else {
+      const text = this._generateText();
+      this.engine.reset(text);
+      this.levelUI.render();
+    }
   }
 
   _checkLevelCompletion() {
