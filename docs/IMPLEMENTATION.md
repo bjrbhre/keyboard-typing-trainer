@@ -244,17 +244,26 @@ Reference: [PRD.md](PRD.md)
 
 ---
 
-## Étape 6 — Polish Catppuccin Mocha ⬜
+## Étape 6 — Polish Catppuccin Mocha ✅ (non nécessaire)
 
-**Statut :** Non implémentée
+**Statut :** Déjà couvert
 
-### À faire
+Le thème Catppuccin Mocha est déjà appliqué partout via les variables CSS, les transitions sont en place (touches, caractères, boutons), et les micro-détails UX (hover, focus, états) existent. Pas de problème visuel identifié.
 
-- Revue complète de la palette Catppuccin Mocha sur tous les composants
-- Transitions et animations fluides
+---
+
+## Follow-ups
+
+Voir [RFC-001.md](RFC-001.md) pour la liste des améliorations potentielles :
+- Shift / Majuscules (priorité haute)
+- Ponctuation dans les drills
+- Rangée numérique
 - Responsive design
-- Micro-détails UX (hover, focus, états, feedback visuel de complétion de niveau)
-- Espacement, typographie, cohérence
+- Indicateur de doigt actif
+- Historique de progression
+- Replay à tout moment
+- Corpus plus riche
+- Accents en QWERTY français
 
 ---
 
