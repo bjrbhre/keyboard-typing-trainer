@@ -8,7 +8,7 @@ import { StatsDisplay } from './stats.js';
 import { LAYOUTS } from './keyboard.js';
 import { KeyboardDisplay } from './keyboard-display.js';
 import { store } from './store.js';
-import { LEVEL_SPECS, generateDrill, isLevelCompleted, THRESHOLDS } from './levels.js';
+import { LEVEL_SPECS, generateDrill, generateTrainingText, isLevelCompleted, THRESHOLDS, MIN_WORDS } from './levels.js';
 import { LevelUI } from './level-ui.js';
 
 class App {
@@ -21,8 +21,14 @@ class App {
     this.scores = store.get('scores') || {};
     this.levelCompleted = false;
 
-    // Generate initial drill and create engine
-    const text = generateDrill(this.currentLevel, this.layout);
+    // Mode: 'learning' or 'training'
+    this.mode = 'learning';
+
+    // Language: 'en' or 'fr'
+    this.language = store.get('language') || 'en';
+
+    // Generate initial text and create engine
+    const text = this._generateText();
     this.engine = new Engine(text);
 
     // Create UI components
@@ -44,6 +50,86 @@ class App {
 
     // Layout picker
     this._initLayoutPicker();
+
+    // Language picker
+    this._initLanguagePicker();
+
+    // Mode tabs
+    this._initModeTabs();
+  }
+
+  _generateText() {
+    if (this.mode === 'training') {
+      const text = generateTrainingText(this.currentLevel, this.layout, this.language);
+      if (text) return text;
+      // Not enough words for this level → fall back to drill
+    }
+    return generateDrill(this.currentLevel, this.layout);
+  }
+
+  _initModeTabs() {
+    const learningTab = document.getElementById('tab-learning');
+    const trainingTab = document.getElementById('tab-training');
+
+    learningTab.addEventListener('click', () => {
+      this.mode = 'learning';
+      this._updateModeTabs();
+      this.selectLevel(this.currentLevel);
+    });
+
+    trainingTab.addEventListener('click', () => {
+      this.mode = 'training';
+      this._updateModeTabs();
+      this.selectLevel(this.currentLevel);
+    });
+
+    this._updateModeTabs();
+  }
+
+  _updateModeTabs() {
+    const learningTab = document.getElementById('tab-learning');
+    const trainingTab = document.getElementById('tab-training');
+
+    learningTab.classList.toggle('active', this.mode === 'learning');
+    trainingTab.classList.toggle('active', this.mode === 'training');
+  }
+
+  _initLanguagePicker() {
+    const langBtn = document.getElementById('lang-toggle');
+    const langMenu = document.getElementById('lang-menu');
+    const langOptions = langMenu.querySelectorAll('.lang-option');
+
+    this._updateLanguageMenu();
+
+    langBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      langMenu.classList.toggle('hidden');
+    });
+
+    langOptions.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.language = btn.dataset.lang;
+        store.set('language', this.language);
+        this._updateLanguageMenu();
+        langMenu.classList.add('hidden');
+        if (this.mode === 'training') {
+          this.selectLevel(this.currentLevel);
+        }
+      });
+    });
+
+    document.addEventListener('click', () => {
+      langMenu.classList.add('hidden');
+    });
+  }
+
+  _updateLanguageMenu() {
+    const langMenu = document.getElementById('lang-menu');
+    const langOptions = langMenu.querySelectorAll('.lang-option');
+    langOptions.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === this.language);
+    });
   }
 
   _initLayoutPicker() {
@@ -93,19 +179,21 @@ class App {
     this.levelCompleted = false;
     store.set('currentLevel', levelId);
 
-    const text = generateDrill(levelId, this.layout);
+    const text = this._generateText();
     this.engine.reset(text);
     this.levelUI.render();
   }
 
   replayDrill() {
     this.levelCompleted = false;
-    const text = generateDrill(this.currentLevel, this.layout);
+    const text = this._generateText();
     this.engine.reset(text);
     this.levelUI.render();
   }
 
   _checkLevelCompletion() {
+    // Only check completion in learning mode
+    if (this.mode !== 'learning') return;
     if (this.levelCompleted) return;
 
     const stats = this.engine.getStats();

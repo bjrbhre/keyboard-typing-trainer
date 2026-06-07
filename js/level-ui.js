@@ -15,16 +15,17 @@ export class LevelUI {
   render() {
     const currentLevel = this.app.currentLevel;
     const completedLevels = this.app.completedLevels;
+    const isTraining = this.app.mode === 'training';
 
     let navHtml = '';
     for (const spec of LEVEL_SPECS) {
       const isCompleted = completedLevels.includes(spec.id);
-      const isUnlocked = spec.id <= currentLevel || isCompleted;
+      const isUnlocked = isTraining || spec.id <= currentLevel || isCompleted;
       const isCurrent = spec.id === currentLevel;
 
       let cls = 'level-btn';
       if (isCurrent) cls += ' current';
-      if (isCompleted) cls += ' completed';
+      if (isCompleted && !isTraining) cls += ' completed';
       if (isUnlocked && !isCurrent) cls += ' unlocked';
       if (!isUnlocked) cls += ' locked';
 
@@ -47,6 +48,19 @@ export class LevelUI {
     const spec = LEVEL_SPECS.find(s => s.id === this.app.currentLevel);
     if (!spec) return;
 
+    // Training mode: show level name + language, no thresholds
+    if (this.app.mode === 'training') {
+      const langLabel = this.app.language === 'fr' ? 'Français' : 'English';
+      this.infoEl.innerHTML = `
+        <span class="level-name">${spec.name}</span>
+        <div class="level-thresholds">
+          <span class="met">${langLabel}</span>
+        </div>
+      `;
+      return;
+    }
+
+    // Learning mode: show thresholds
     const stats = this.app.engine.getStats();
     const totalChars = this.app.engine.position;
     const successRate = stats.successRate;

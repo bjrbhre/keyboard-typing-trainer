@@ -188,24 +188,51 @@ Reference: [PRD.md](PRD.md)
 
 ---
 
-## Étape 5 — Mode entraînement + mots réels ⬜
+## Étape 5 — Mode entraînement + mots réels ✅
 
-**Statut :** Non implémentée
+**Statut :** Terminée
 
-### À faire
+### Ce qui a été implémenté
 
-- Corpus de mots anglais (`words-en.js`) indexé par lettres disponibles
-- Corpus de mots français (`words-fr.js`) indexé par lettres disponibles
-- Mode entraînement : sélection d'un niveau + langue → génération de texte avec des mots réels
-- Toggle langue FR/EN dans l'UI
-- Filtrage : ne générer que des mots composés exclusivement des touches du niveau choisi
-- Transition naturelle : les premiers niveaux n'ont pas assez de touches pour des mots réels → drills ; les niveaux avancés → phrases
+- Corpus anglais (`words-en.js`) : ~800 mots courants (3–5 lettres), flat array filtré au runtime
+- Corpus français (`words-fr.js`) : ~400 mots courants (2–5 lettres), avec accents
+- Mode entraînement : onglets Apprentissage / Entraînement dans le header
+- Toggle langue FR/EN : icône A↔à à côté du globe layout, même pattern de picker
+- Filtrage par touches disponibles : `generateTrainingText()` filtre les mots du corpus par `resolveKeys(levelId, layout)`
+- Transition naturelle : si < `MIN_WORDS` (10) mots disponibles → fallback automatique vers drill
+- Navigation libre en entraînement : tous les niveaux débloqués, pas de seuils de validation
+- Pseudo-phrases en entraînement : groupes de 3–6 mots séparés par des espaces
 
-### Questions ouvertes
+### Décisions prises pendant l'implémentation
 
-- Quelle taille de corpus ? (500 mots ? 2000 ?)
-- Mots isolés ou phrases construites à partir des mots filtrés ?
-- Où placer le toggle langue ? (à côté du globe ? dans un menu ?)
+1. **Corpus flat array + filtre runtime** — plutôt qu'un index par lettres. Avec ~800 mots, le filtre est instantané. Le fichier reste simple et lisible.
+
+2. **French AZERTY et accents** — les mots français avec accents (é, è, ç, à, ù) ne sont disponibles que quand le layout AZERTY est actif et le niveau inclut les touches accentuées. En QWERTY, ces mots sont filtrés.
+
+3. **Fallback drill quand pas assez de mots** — `MIN_WORDS = 10`. Les premiers niveaux (1–4) n'ont que 0–2 mots réels → drill. Niveau 5 (rangée de base) : 0 mots en AZERTY (pas de voyelles sur la home row), 2 mots en QWERTY français ("la", "sa") → drill. Niveau 6+ : suffisamment de mots → texte réel.
+
+4. **Mode tabs dans le header** — deux boutons "Apprentissage" / "Entraînement" avec bordures arrondies concaténées. Le mode actif est surligné en mauve. Simplicité maximale.
+
+5. **Language picker à côté du globe** — même pattern que le layout picker. Icône A↔à + menu popup. La langue ne change le texte qu'en mode entraînement (les drills sont language-independent).
+
+6. **Bug fix : niveaux 6 et 7 `includeAll`** — les specs des niveaux 6 (Top row) et 7 (Bottom row) avaient `newFingers: []` mais pas `includeAll: true`, ce qui faisait que `resolveKeys` n'ajoutait aucune touche pour ces niveaux. Les drills 6–7 utilisaient donc seulement les touches des niveaux précédents (rangée de base), et le mode entraînement ne pouvait pas trouver de mots. Corrigé.
+
+7. **Pas de validation en entraînement** — `_checkLevelCompletion()` ne s'active que en mode `learning`. En mode `training`, l'info sous les niveaux affiche seulement le nom + la langue, pas les seuils.
+
+### Fichiers créés
+
+| Fichier | Rôle |
+|---|---|
+| `js/words-en.js` | Corpus anglais ~800 mots |
+| `js/words-fr.js` | Corpus français ~400 mots |
+
+### Fichiers modifiés
+
+- `js/levels.js` — `generateTrainingText()` + `MIN_WORDS` + fix `includeAll` niveaux 6/7
+- `js/app.js` — mode `learning`/`training`, langue, `_generateText()`, tabs, language picker
+- `js/level-ui.js` — niveaux débloqués en training, info mode-aware
+- `index.html` — tabs mode + language picker + layout picker refactorisé
+- `style.css` — styles mode tabs + picker refactorisé (`.picker-btn`, `.picker-menu`)
 
 ---
 

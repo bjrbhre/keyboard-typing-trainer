@@ -53,7 +53,7 @@ export class TextDisplay {
     this.container.classList.add('drill-finished');
     this.container.innerHTML = `
       <div class="drill-done">
-        <div class="drill-done-title">Drill terminé</div>
+        <div class="drill-done-title">Terminé</div>
         <div class="drill-done-stats">${stats.cpm} CPM · ${stats.successRate}% succès</div>
         <div class="drill-done-hint">Appuie sur Entrée pour un nouveau drill</div>
       </div>

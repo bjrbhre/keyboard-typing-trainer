@@ -1,3 +1,6 @@
+import { WORDS_EN } from './words-en.js';
+import { WORDS_FR } from './words-fr.js';
+
 /**
  * Levels — progression definitions and drill generation
  *
@@ -13,8 +16,8 @@ const LEVEL_SPECS = [
   { id: 3,  name: 'Home — Ring fingers',          newFingers: ['leftRing', 'rightRing'],                     rows: ['home'] },
   { id: 4,  name: 'Home — Left pinky',            newFingers: ['leftPinky'],                                 rows: ['home'] },
   { id: 5,  name: 'Home — Full row',              newFingers: [],                                            rows: ['home'], includeAll: true },
-  { id: 6,  name: 'Top row',                      newFingers: [],                                            rows: ['top'] },
-  { id: 7,  name: 'Bottom row',                   newFingers: [],                                            rows: ['bottom'] },
+  { id: 6,  name: 'Top row',                      newFingers: [],                                            rows: ['top'], includeAll: true },
+  { id: 7,  name: 'Bottom row',                   newFingers: [],                                            rows: ['bottom'], includeAll: true },
   { id: 8,  name: 'Full keyboard',                newFingers: [],                                            rows: ['home', 'top', 'bottom'], includeAll: true },
 ];
 
@@ -118,6 +121,39 @@ function generateRandomDrill(chars, length) {
 }
 
 /**
+ * Generate training text from real words filtered by available keys.
+ * Returns null if not enough words are available (< MIN_WORDS),
+ * signaling the caller to fall back to drills.
+ */
+const MIN_WORDS = 10;
+
+function generateTrainingText(levelId, layout, language = 'en', length = 150) {
+  const keys = resolveKeys(levelId, layout);
+  const corpus = language === 'fr' ? WORDS_FR : WORDS_EN;
+
+  const filtered = corpus.filter(word =>
+    [...word].every(c => keys.has(c))
+  );
+
+  if (filtered.length < MIN_WORDS) return null;
+
+  let text = '';
+  const sentenceSizes = [3, 4, 5, 6];
+
+  while (text.length < length) {
+    // Build a pseudo-phrase of 3–6 words
+    const sentenceLen = sentenceSizes[Math.floor(Math.random() * sentenceSizes.length)];
+    const words = [];
+    for (let i = 0; i < sentenceLen; i++) {
+      words.push(filtered[Math.floor(Math.random() * filtered.length)]);
+    }
+    text += words.join(' ') + ' ';
+  }
+
+  return text.slice(0, length);
+}
+
+/**
  * Check if a level is completed based on stats
  */
 function isLevelCompleted(stats) {
@@ -128,4 +164,4 @@ function isLevelCompleted(stats) {
   );
 }
 
-export { LEVEL_SPECS, THRESHOLDS, ROW_MAP, resolveKeys, generateDrill, isLevelCompleted };
+export { LEVEL_SPECS, THRESHOLDS, ROW_MAP, resolveKeys, generateDrill, generateTrainingText, isLevelCompleted, MIN_WORDS };
