@@ -159,11 +159,18 @@ header {
   right: 2.8rem;
 }
 
+/* Hide language picker in free mode */
+#lang-toggle.free-hidden,
+#lang-menu.free-hidden {
+  display: none;
+}
+
 /* ── Level Bar ── */
 #level-bar {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  align-items: center;
 }
 
 #level-nav {
@@ -171,6 +178,40 @@ header {
   gap: 0.4rem;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+/* Hide level nav in free mode */
+#level-bar.free-mode #level-nav {
+  display: none;
+}
+
+/* Free mode action button */
+#free-action {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  background: var(--mauve);
+  color: var(--base);
+  border: 1px solid var(--mauve);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#free-action:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+#free-action:disabled {
+  background: var(--surface1);
+  color: var(--overlay0);
+  border-color: var(--surface1);
+  cursor: default;
+}
+
+#free-action.hidden {
+  display: none;
 }
 
 .level-btn {
@@ -266,7 +307,8 @@ main {
   height: 7.5rem;
   overflow-y: auto;
   scrollbar-width: none;          /* Firefox */
-  word-break: keep-all;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
   position: relative;
   user-select: none;
 }
@@ -280,11 +322,12 @@ main {
 }
 
 #text-display .drill-done {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
   gap: 0.3rem;
   text-align: center;
 }
@@ -305,6 +348,31 @@ main {
   font-size: 0.8rem;
   color: var(--overlay0);
   margin-top: 0.5rem;
+}
+
+/* Free mode textarea */
+#text-display .free-textarea {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+  scrollbar-width: none;
+}
+
+#text-display .free-textarea::-webkit-scrollbar {
+  display: none;
+}
+
+#text-display .free-textarea::placeholder {
+  color: var(--overlay0);
 }
 
 #text-display .char {

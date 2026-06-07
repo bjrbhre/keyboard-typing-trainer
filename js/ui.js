@@ -21,6 +21,9 @@ export class TextDisplay {
   }
 
   render() {
+    // In free input mode, don't overwrite the textarea
+    if (this._freeInputMode) return;
+
     const text = this.engine.text;
 
     if (this.engine.finished) {
@@ -53,7 +56,7 @@ export class TextDisplay {
       let cls = 'char ' + status;
       if (isCursor) cls += ' cursor';
 
-      const display = ch === ' ' ? '\u00A0' : ch;
+      const display = ch;
       html += `<span class="${cls}">${this._escape(display)}</span>`;
     }
 
@@ -64,13 +67,30 @@ export class TextDisplay {
   _renderFinished() {
     const stats = this.engine.getStats();
     this.container.classList.add('drill-finished');
+    const hint = this.customHint || 'Appuie sur Entrée pour un nouveau drill';
     this.container.innerHTML = `
       <div class="drill-done">
         <div class="drill-done-title">Terminé</div>
         <div class="drill-done-stats">${stats.cpm} CPM · ${stats.successRate}% succès</div>
-        <div class="drill-done-hint">Appuie sur Entrée pour un nouveau drill</div>
+        <div class="drill-done-hint">${hint}</div>
       </div>
     `;
+    // Scroll to top so the Terminé screen is visible and centered
+    this.container.scrollTop = 0;
+  }
+
+  showFreeTextarea() {
+    this._freeInputMode = true;
+    this.container.classList.remove('drill-finished');
+    this.container.innerHTML = '<textarea class="free-textarea" placeholder="Tape ou colle ton texte ici…"></textarea>';
+    const textarea = this.container.querySelector('.free-textarea');
+    textarea.focus();
+    return textarea;
+  }
+
+  showDrill() {
+    this._freeInputMode = false;
+    this.render();
   }
 
   _scrollToCursor() {

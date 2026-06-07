@@ -22,8 +22,18 @@ class App {
     this.scores = store.get('scores') || {};
     this.levelCompleted = false;
 
-    // Mode: 'learning' or 'training'
+    // Mode: 'learning', 'training', or 'free'
     this.mode = 'learning';
+
+    // Free mode phase: 'input' or 'drill'
+    this.freePhase = 'input';
+
+    // Flag: when true, global click re-focus to #input-capture is disabled
+    // (visible textarea in free mode takes focus instead)
+    this._freeInputActive = false;
+
+    // Reference to the free-mode textarea element
+    this._freeTextarea = null;
 
     // Language: 'en' or 'fr'
     this.language = store.get('language') || 'en';
@@ -58,6 +68,16 @@ class App {
 
     // Mode tabs
     this._initModeTabs();
+
+    // Free action button click handler (dual role: Commencer or Modifier le texte)
+    document.getElementById('free-action').addEventListener('click', () => {
+      if (this.mode !== 'free') return;
+      if (this.freePhase === 'input') {
+        this._startFreeDrill();
+      } else {
+        this._returnToFreeInput();
+      }
+    });
   }
 
   _generateText() {
@@ -72,28 +92,195 @@ class App {
   _initModeTabs() {
     const learningTab = document.getElementById('tab-learning');
     const trainingTab = document.getElementById('tab-training');
+    const freeTab = document.getElementById('tab-free');
 
     learningTab.addEventListener('click', () => {
-      this.mode = 'learning';
-      this._updateModeTabs();
-      this.selectLevel(this.currentLevel);
+      this._switchMode('learning');
     });
 
     trainingTab.addEventListener('click', () => {
-      this.mode = 'training';
-      this._updateModeTabs();
-      this.selectLevel(this.currentLevel);
+      this._switchMode('training');
+    });
+
+    freeTab.addEventListener('click', () => {
+      this._switchMode('free');
     });
 
     this._updateModeTabs();
   }
 
+  _switchMode(newMode) {
+    if (this.mode === newMode) return;
+
+    // Exit current mode
+    if (this.mode === 'free') {
+      this._exitFreeMode();
+    }
+
+    this.mode = newMode;
+
+    // Enter new mode
+    if (this.mode === 'free') {
+      this._enterFreeMode();
+    } else {
+      this._restoreNormalMode();
+    }
+
+    this._updateModeTabs();
+  }
+
+  _enterFreeMode() {
+    this.freePhase = 'input';
+    this._freeInputActive = true;
+
+    // Hide level bar nav, show free action button
+    const levelBar = document.getElementById('level-bar');
+    levelBar.classList.add('free-mode');
+    const freeAction = document.getElementById('free-action');
+    freeAction.classList.remove('hidden');
+    freeAction.disabled = true;
+
+    // Hide language picker
+    document.getElementById('lang-toggle').classList.add('free-hidden');
+    document.getElementById('lang-menu').classList.add('free-hidden');
+
+    // Keyboard display idle (no highlight)
+    this.keyboardDisplay.clearHighlight();
+
+    // Show editable textarea in text-display, pre-filled with lastFreeText
+    this._freeTextarea = this.textDisplay.showFreeTextarea();
+    const savedText = store.get('lastFreeText');
+    if (savedText) {
+      this._freeTextarea.value = savedText;
+      const len = savedText.length;
+      this._freeTextarea.selectionStart = len;
+      this._freeTextarea.selectionEnd = len;
+      freeAction.disabled = savedText.trim().length < 5;
+    }
+
+    // Validate: enable/disable Commencer button based on length
+    this._freeTextarea.addEventListener('input', () => {
+      freeAction.disabled = this._freeTextarea.value.trim().length < 5;
+    });
+
+    // Ctrl/Cmd+Enter shortcut on textarea
+    this._freeTextarea.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (!freeAction.disabled) {
+          this._startFreeDrill();
+        }
+      }
+    });
+
+    // Click inside textarea should not steal focus to #input-capture
+    this._freeTextarea.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  _exitFreeMode() {
+    // Save current text to store for persistence
+    const textToSave = this._freeText || (this._freeTextarea && this._freeTextarea.value) || '';
+    if (textToSave.trim()) {
+      store.set('lastFreeText', textToSave);
+    }
+    this._freeInputActive = false;
+    this._freeTextarea = null;
+    this._freeText = null;
+  }
+
+  _startFreeDrill() {
+    const trimmedText = this._freeTextarea.value.trim();
+    if (trimmedText.length < 5) return;
+
+    // Store the free text for replay and persistence
+    this._freeText = trimmedText;
+    store.set('lastFreeText', trimmedText);
+    this.freePhase = 'drill';
+    this._freeInputActive = false;
+
+    // Load text into engine
+    this.textDisplay.showDrill();
+    this.textDisplay.customHint = 'Entrée = recommencer · Esc = modifier le texte';
+    this.engine.reset(trimmedText);
+
+    // Re-focus #input-capture for typing
+    document.getElementById('input-capture').focus();
+
+    // Update action button: "Modifier le texte"
+    const freeAction = document.getElementById('free-action');
+    freeAction.disabled = false;
+    freeAction.textContent = 'Modifier le texte · Echap';
+  }
+
+  _returnToFreeInput() {
+    // Switch back to input phase with textarea pre-filled
+    this.freePhase = 'input';
+    this._freeInputActive = true;
+
+    // Keyboard display idle
+    this.keyboardDisplay.clearHighlight();
+
+    // Show textarea pre-filled with the drill text
+    this._freeTextarea = this.textDisplay.showFreeTextarea();
+    this._freeTextarea.value = this._freeText || '';
+    // Place cursor at end of text so it's visible
+    const len = this._freeTextarea.value.length;
+    this._freeTextarea.selectionStart = len;
+    this._freeTextarea.selectionEnd = len;
+    this._freeTextarea.focus();
+
+    // Re-enable validation + Ctrl+Enter on the new textarea
+    const freeAction = document.getElementById('free-action');
+    freeAction.textContent = 'Commencer · Ctrl+Entrée';
+    freeAction.disabled = this._freeTextarea.value.trim().length < 5;
+
+    this._freeTextarea.addEventListener('input', () => {
+      freeAction.disabled = this._freeTextarea.value.trim().length < 5;
+    });
+
+    this._freeTextarea.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        if (!freeAction.disabled) {
+          this._startFreeDrill();
+        }
+      }
+    });
+
+    this._freeTextarea.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  _restoreNormalMode() {
+    // Show level bar nav, hide free action button
+    const levelBar = document.getElementById('level-bar');
+    levelBar.classList.remove('free-mode');
+    const freeAction = document.getElementById('free-action');
+    freeAction.classList.add('hidden');
+
+    // Show language picker
+    document.getElementById('lang-toggle').classList.remove('free-hidden');
+    document.getElementById('lang-menu').classList.remove('free-hidden');
+
+    // Exit free input mode in TextDisplay so render() works again
+    this.textDisplay.customHint = null;
+    this.textDisplay.showDrill();
+
+    // Resume current level
+    this.selectLevel(this.currentLevel);
+  }
+
   _updateModeTabs() {
     const learningTab = document.getElementById('tab-learning');
     const trainingTab = document.getElementById('tab-training');
+    const freeTab = document.getElementById('tab-free');
 
     learningTab.classList.toggle('active', this.mode === 'learning');
     trainingTab.classList.toggle('active', this.mode === 'training');
+    freeTab.classList.toggle('active', this.mode === 'free');
   }
 
   _initLanguagePicker() {
@@ -197,9 +384,15 @@ class App {
 
   replayDrill() {
     this.levelCompleted = false;
-    const text = this._generateText();
-    this.engine.reset(text);
-    this.levelUI.render();
+
+    if (this.mode === 'free') {
+      // In free mode, replay the same text
+      this.engine.reset(this._freeText);
+    } else {
+      const text = this._generateText();
+      this.engine.reset(text);
+      this.levelUI.render();
+    }
   }
 
   _checkLevelCompletion() {
@@ -244,7 +437,9 @@ const inputCapture = document.getElementById('input-capture');
 inputCapture.focus();
 
 // Re-focus on any click so we never lose capture
+// But skip when free input textarea is active (it holds focus)
 document.addEventListener('click', () => {
+  if (app._freeInputActive) return;
   inputCapture.focus();
 });
 
@@ -269,6 +464,12 @@ inputCapture.addEventListener('keydown', (e) => {
     Backquote:'`',Quote:"'",IntlBackslash:'\\',
   };
   if (CODE_TO_KEY[key]) key = CODE_TO_KEY[key];
+
+  // Esc = return to free input phase when in free drill mode
+  if (key === 'Escape' && app.mode === 'free' && app.freePhase === 'drill') {
+    app._returnToFreeInput();
+    return;
+  }
 
   // Enter = replay drill when finished, otherwise pass as newline
   if (key === 'Enter') {
