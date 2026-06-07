@@ -152,6 +152,9 @@ class App {
     const savedText = store.get('lastFreeText');
     if (savedText) {
       this._freeTextarea.value = savedText;
+      const len = savedText.length;
+      this._freeTextarea.selectionStart = len;
+      this._freeTextarea.selectionEnd = len;
       freeAction.disabled = savedText.trim().length < 5;
     }
 
@@ -222,6 +225,11 @@ class App {
     // Show textarea pre-filled with the drill text
     this._freeTextarea = this.textDisplay.showFreeTextarea();
     this._freeTextarea.value = this._freeText || '';
+    // Place cursor at end of text so it's visible
+    const len = this._freeTextarea.value.length;
+    this._freeTextarea.selectionStart = len;
+    this._freeTextarea.selectionEnd = len;
+    this._freeTextarea.focus();
 
     // Re-enable validation + Ctrl+Enter on the new textarea
     const freeAction = document.getElementById('free-action');
