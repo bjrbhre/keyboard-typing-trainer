@@ -75,6 +75,8 @@ export class TextDisplay {
         <div class="drill-done-hint">${hint}</div>
       </div>
     `;
+    // Scroll to top so the Terminé screen is visible and centered
+    this.container.scrollTop = 0;
   }
 
   showFreeTextarea() {
